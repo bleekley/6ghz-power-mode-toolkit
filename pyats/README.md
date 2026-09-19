@@ -8,9 +8,11 @@ controller (not OTP onboarded, Standard Power bit still false).
 
 ## Scope: what a green run means
 
-A green run means the controller side is clear: the AFC models answer,
-no message or health-check errors, country supported, cloud health OK,
-and the RF profile allows Standard Power. It does NOT mean an AP is
+A green run means exactly the seven checks below passed: the AFC get is
+accepted, no message or health-check errors, country supported, cloud
+health OK, and the RF profile allows Standard Power. It does NOT mean
+every controller-side blocker is ruled out, and it does NOT mean an AP
+is
 ready to transmit at Standard Power. Per-AP capability, location,
 height, radio state, RF-tag attachment, grants, and grant expiry are not
 checked here; read those with `show wireless afc ap` or
@@ -34,17 +36,17 @@ with zero 6 GHz APs joined.
 
 | Section | Asserts |
 |---|---|
-| afc_oper_model_answers | The AFC operational model is registered and answers. (An empty reply also passes; this only proves the model exists.) |
+| afc_oper_model_answers | The get with the AFC oper filter is accepted. (An empty reply also passes; a subtree filter is model-agnostic, so this does not prove the model is present. Check schema support separately, for example with get-schema.) |
 | afc_cloud_message_errors_are_zero | `afc-msg-err` equals 0 (historical counter). |
 | afc_health_check_never_down | `healthcheck/num-hc-down` equals 0 (historical counter). |
 | afc_country_is_supported | `country-not-supported` is false. |
-| afc_cloud_health_is_ok | `healthcheck/cloud-hc-ok` is true. The healthcheck is a YANG choice: healthy reports this leaf, unhealthy reports an `hc-error-status` container naming the blocker instead. |
+| afc_cloud_health_is_ok | `healthcheck/cloud-hc-ok` is true. The healthcheck is a YANG choice with three cases: healthy reports this leaf, unknown reports `cloud-hc-unknown`, and unhealthy reports an `hc-error-status` container naming the blocker. |
 | standard_power_allowed_on_6ghz_profile | `std-pwr-mode-allowed` is true on the named profile. |
 | cli_cross_check_six_ghz_ap_count | `show wireless afc statistics` contains the expected fields. |
 
 A controller that is not ready fails the matching checks, which is the
-point. Treat a green run as "nothing on the controller blocks Standard
-Power", then verify the per-AP story separately.
+point. Treat a green run as "these seven checks passed", then verify
+the per-AP story separately.
 
 ## Setup and running
 
@@ -93,7 +95,9 @@ any job.
 
 One more, hit while re-verifying: **activate the venv, do not just call
 `venv/bin/pyats` by absolute path.** Easypy's pre-job environment check
-reads the `pip` that is on your PATH, so if the system Python carries a
-mismatched pyATS install, the job aborts with its version table and zero
-tests run, even though the venv itself is clean. `source
-venv/bin/activate` puts the venv's pip first and the check passes.
+spawns `pyats version check` as a subprocess, and that `pyats` resolves
+through your PATH. If the system Python carries a mismatched pyATS
+install, the subprocess reports that environment and the job aborts
+with its version table and zero tests run, even though the venv itself
+is clean. `source venv/bin/activate` puts the venv's executables first
+and the check passes.

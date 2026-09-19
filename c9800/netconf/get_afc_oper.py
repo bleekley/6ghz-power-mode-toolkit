@@ -56,22 +56,27 @@ def summarize(cloud: str, oper: str) -> int:
     for field in HEALTH_FIELDS:
         print(f"  {field:22s} {leaf(cloud_root, CLOUD_NS, field)}")
 
-    # The healthcheck carries a YANG choice: a healthy service reports the
-    # cloud-hc-ok leaf, an unhealthy one reports an hc-error-status
-    # container naming the blocker. Exactly one of the two appears.
+    # The healthcheck carries a YANG choice with three cases: healthy
+    # (cloud-hc-ok), unknown (cloud-hc-unknown), or an hc-error-status
+    # container naming the blocker. The leaves are booleans, so check the
+    # value, not just the presence.
     ok = leaf(cloud_root, CLOUD_NS, "cloud-hc-ok")
+    unknown = leaf(cloud_root, CLOUD_NS, "cloud-hc-unknown")
     errors = cloud_root.find(f".//{{{CLOUD_NS}}}hc-error-status")
     if ok is not None:
-        print(f"== Cloud health: OK (cloud-hc-ok = {ok}) ==")
+        state = "OK" if ok == "true" else "NOT OK"
+        print(f"== Cloud health: {state} (cloud-hc-ok = {ok}) ==")
+    if unknown is not None:
+        print(f"== Cloud health: unknown (cloud-hc-unknown = {unknown}) ==")
     if errors is not None:
         print("== Current blockers (hc-error-status) ==")
         for element in errors.iter():
             if element is errors or len(element):
                 continue
             print(f"  {local(element.tag):22s} {element.text}")
-    if ok is None and errors is None:
-        print("== Cloud health: not reported (neither cloud-hc-ok nor "
-              "hc-error-status present) ==")
+    if ok is None and unknown is None and errors is None:
+        print("== Cloud health: not reported (no cloud-status-choice case "
+              "present) ==")
 
     if oper_root.find(f".//{{{OPER_NS}}}afc-oper-data") is None:
         print("== Per-AP AFC responses: no afc-oper data in the reply ==")
@@ -80,7 +85,9 @@ def summarize(cloud: str, oper: str) -> int:
     print(f"== Per-AP AFC responses: {len(responses)} ==")
     for response in responses:
         mac = response.findtext(f"{{{OPER_NS}}}ap-mac")
-        expiry = response.findtext(f"{{{OPER_NS}}}expire-time")
+        # expire-time is nested under resp-data, not a direct child.
+        expiry_el = response.find(f".//{{{OPER_NS}}}expire-time")
+        expiry = expiry_el.text if expiry_el is not None else "not reported"
         print(f"  ap {mac}  grant expires {expiry}")
     if not responses:
         print("  none (no 6 GHz APs with AFC activity on this controller)")

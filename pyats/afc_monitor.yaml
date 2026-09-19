@@ -104,11 +104,12 @@ AfcReadiness:
                       xpath: /afc-cloud-oper-data/afc-cloud-stats/healthcheck/country-not-supported
 
         # ---- 5. Does the AFC cloud health check report healthy? ----
-        # The healthcheck carries a YANG choice: a healthy service reports the
-        # cloud-hc-ok leaf, an unhealthy one reports an hc-error-status
-        # container naming the blocker (for example not-otp-upgraded). So the
-        # healthy assertion is on cloud-hc-ok; asserting on an error leaf
-        # would fail a HEALTHY controller, where that leaf is absent.
+        # The healthcheck carries a YANG choice with three cases: healthy
+        # (the cloud-hc-ok leaf), unknown (cloud-hc-unknown), or an
+        # hc-error-status container naming the blocker (for example
+        # not-otp-upgraded). So the healthy assertion is cloud-hc-ok == true;
+        # asserting on an error leaf would fail a HEALTHY controller, where
+        # that leaf is absent.
         # EXPECTED TO FAIL on this rig: the 9800-CL needs its OTP token
         # imported before it will ever talk to the AFC service, so
         # cloud-hc-ok is absent here. Read the blocker with get_afc_oper.py.

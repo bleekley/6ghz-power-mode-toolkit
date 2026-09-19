@@ -4,7 +4,12 @@
 Asks yes/no questions about the deployment and prints a recommendation
 with the reasons behind it. The first three questions are prerequisites:
 Standard Power is never recommended while any of them fails, no matter
-how the preference questions land. Stdlib only. Run interactively:
+how the preference questions land.
+
+Scope: indoor deployments where LPI is available as the fallback mode.
+Outdoor and Standard-Power-only designs are out of scope; LPI is an
+indoor-only mode and cannot be the answer there. Stdlib only. Run
+interactively:
 
     python3 decide.py
 
@@ -50,7 +55,8 @@ QUESTIONS = [
      "sp", 2,
      "That is the client talk-back failure pattern. Standard Power "
      "raises the client power ceiling, which helps exactly this. The "
-     "client still transmits below the AP's authorized power."),
+     "client stays capped at least 6 dB below the AP's authorized "
+     "power."),
     ("Are 80 or 160 MHz channels a requirement (large file transfer, "
      "special-purpose clients)?",
      "lpi", 2,
@@ -71,9 +77,11 @@ QUESTIONS = [
 ]
 
 CAVEATS = [
-    "Standard Power does not make the link symmetric: clients must stay "
-    "up to 6 dB below the AP's authorized power. It raises the ceilings "
-    "for both sides.",
+    "This tool assumes an indoor site where LPI is available. Outdoor "
+    "and Standard-Power-only designs need a different analysis.",
+    "Standard Power does not make the link symmetric: clients are "
+    "capped at least 6 dB below the AP's authorized power. It raises "
+    "the ceilings for both sides.",
     "Fallback on AFC failure varies by product. The rules allow a grace "
     "period, dual-mode indoor APs typically drop to LPI, and SP-only "
     "hardware cannot. Confirm your AP's behavior, and design so LPI "
@@ -131,7 +139,8 @@ def main():
         answers = [a == "y" for a in raw]
     else:
         print("Answer for the site you are designing, not the ideal "
-              "site.\n\nPrerequisites first:\n")
+              "site. This tool assumes an indoor deployment where LPI "
+              "is available.\n\nPrerequisites first:\n")
         answers = [ask(GATES[i][0]) for i in range(len(GATES))]
         print("\nNow the site itself:\n")
         answers += [ask(question) for question, _, _, _ in QUESTIONS]

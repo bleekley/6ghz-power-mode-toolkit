@@ -11,10 +11,11 @@ genuinely work. The cost is power: LPI's ceilings are low, and client
 devices get fixed ceilings 6 dB below the AP's, so the AP reaches the
 client at distances where the client can no longer reach the AP.
 
-**Standard Power** raises the power ceilings roughly 6 dB on both sides
-of the link. Clients still must transmit up to 6 dB below the AP's
-authorized power, so the asymmetry never goes away, but both the AP and
-the client may run louder, which restores talk-back range, raises client
+**Standard Power** raises the power ceilings on both sides of the link
+(the EIRP cap by 6 dB, the power-density cap by far more). Clients are
+still capped at least 6 dB below the AP's authorized power, so the
+asymmetry never goes away, but with a sufficient grant both the AP and
+the client may run louder, which extends talk-back range, raises client
 MCS rates, and cuts per-client airtime. The costs are an Automated
 Frequency Coordination (AFC) dependency (3D location with stated
 uncertainty, 24-hour re-authorization, product-dependent fallback on
@@ -76,8 +77,10 @@ client population needs it and your mode's rules or grant support it.
 
 Design for the fallback. The rules give a failed AFC check-in a grace
 period, and what happens after it is product-dependent: Cisco's
-dual-mode indoor APs drop to LPI, SP-only hardware goes quiet. Either
-way the LPI coverage picture is the floor your design must survive.
+dual-mode indoor APs drop to LPI, SP-only hardware goes quiet. For
+dual-mode indoor gear the LPI coverage picture is the floor your design
+must survive; for SP-only gear the floor is a dead radio, and the
+design has to survive that instead.
 Survey for client talk-back, not just AP signal. And monitor the AFC
 state if you enable Standard Power, because channel and power grants can
 change from outside your network. The `pyats/` precheck in this repo

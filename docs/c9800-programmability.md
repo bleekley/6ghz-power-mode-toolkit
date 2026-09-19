@@ -75,8 +75,9 @@ streaming telemetry:
 * `Cisco-IOS-XE-wireless-afc-cloud-oper`: message counters, error
   counters, round-trip times, and a periodic health check block (my
   bench showed a 30-second cadence; Cisco documentation shows longer
-  timers, so treat the interval as release-dependent). The block carries
-  a YANG choice: healthy reports the `cloud-hc-ok` leaf, unhealthy
+  timers, so measure your own rather than assuming either number). The
+  block carries a YANG choice with three cases: healthy reports the
+  `cloud-hc-ok` leaf, unknown reports `cloud-hc-unknown`, and unhealthy
   reports an `hc-error-status` container naming the blocker (for example
   `not-otp-upgraded`).
 
@@ -87,8 +88,9 @@ AP response. Whether these models support on-change
 telemetry subscriptions is unverified; plan for periodic polling until
 you prove otherwise on your release.
 
-The `../pyats/` controller-side precheck asserts on these fields and
-adds one CLI cross-check. genieparser ships no parser for any `show wireless afc`
+The `../pyats/` controller-side precheck asserts on several of these
+fields (not grant expiry, which needs a joined 6 GHz AP) and adds one
+CLI cross-check. genieparser ships no parser for any `show wireless afc`
 command (checked at version 26.8), which is why the monitor is NETCONF
 end to end.
 

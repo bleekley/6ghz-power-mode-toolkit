@@ -27,7 +27,8 @@ period the rules allow. What happens next is product-dependent: Cisco's
 dual-mode indoor APs drop to LPI, with LPI's lower power ceilings and
 smaller cells, while SP-only hardware (some outdoor APs) has no LPI to
 drop to and the radio goes quiet. Confirm your AP's behavior, and design
-so the network survives the LPI picture either way.
+for the fallback your hardware actually has: the LPI coverage picture
+for dual-mode indoor APs, a dead radio for SP-only ones.
 
 ## The indoor location problem
 
@@ -66,8 +67,9 @@ onboarded to the Cisco cloud with a one-time-password token import, and
 it needs DNS plus outbound HTTPS (and OCSP) reachability from the
 controller (per the C9800 AFC configuration guide chapters). The
 controller runs a periodic AFC service health check (my bench unit
-reported on a 30-second cadence; Cisco's documentation shows longer
-timers, so treat the interval as release-dependent) and reports the
+reported a 30-second cadence; Cisco's documentation shows longer
+timers, so measure your own rather than assuming either number) and
+reports the
 current state in a readable field: a healthy service sets `cloud-hc-ok`,
 an unhealthy one names the blocker, for example `not-otp-upgraded`. The
 scripts in `../c9800/netconf/` read that state over NETCONF.

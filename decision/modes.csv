@@ -2,7 +2,7 @@ dimension,low_power_indoor,standard_power
 spectrum_availability,"Full 1200 MHz (US), including band-edge channels","U-NII-5 and U-NII-7 only (850 MHz in the US), minus AFC exclusions at your location"
 channel_width,"Wide channels work (80/160 MHz); PSD rules scale power with width","Grant-dependent; exclusions can break wide contiguous blocks, and 160 MHz works where the grant allows it"
 transmit_power,"Lower fixed ceilings (AP 30 dBm EIRP, 5 dBm/MHz PSD)","Higher AFC-authorized ceilings (AP up to 36 dBm EIRP, 23 dBm/MHz PSD)"
-client_rule,"Fixed client ceilings 6 dB below the AP ceilings (24 dBm EIRP)","Clients stay up to 6 dB below the AP's authorized power; higher ceilings, same asymmetry"
+client_rule,"Fixed client ceilings 6 dB below the AP ceilings (24 dBm EIRP)","Clients capped at least 6 dB below the AP's authorized power; higher ceilings, same asymmetry"
 regulatory,"None; indoor use without coordination","AFC required: location with stated uncertainty, height, 24-hour re-authorization"
 fallback,"Not applicable; LPI is the floor","Product-dependent: dual-mode indoor APs drop to LPI after a grace period, SP-only APs cannot"
 operational_overhead,"None after deployment","AFC onboarding, location provisioning, ongoing monitoring"

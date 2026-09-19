@@ -5,3 +5,4 @@ pyats/testbed.yaml
 .DS_Store
 AUDIT-PROMPT.md
 VERIFY-PROMPT.md
+venv/
