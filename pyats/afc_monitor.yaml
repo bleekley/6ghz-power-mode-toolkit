@@ -1,8 +1,9 @@
 # Blitz precheck for 6 GHz AFC / Standard Power on a Catalyst 9800.
 #
-# Scope: this checks the CONTROLLER side only. A green run means nothing on
-# the controller blocks Standard Power; it does not check AP presence,
-# location, capability, per-AP grants, or grant expiry. Sections 2 and 3
+# Scope: this checks the CONTROLLER side only. A green run means exactly
+# these seven checks passed; it does not rule out every controller-side
+# blocker, and it does not check AP presence, location, capability, per-AP
+# grants, or grant expiry. Sections 2 and 3
 # assert on historical counters, so a system that errored once and recovered
 # keeps failing them until the counters clear.
 #
@@ -20,7 +21,9 @@ AfcReadiness:
     devices: ['wlc1']
     test_sections:
 
-        # ---- 1. Are the AFC models registered and answering? ----
+        # ---- 1. Is a get with the AFC oper filter accepted? ----
+        # An empty reply also passes: a subtree filter is model-agnostic, so
+        # this proves acceptance, not that the model is present.
         - afc_oper_model_answers:
             - yang:
                 device: wlc1

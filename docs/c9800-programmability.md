@@ -82,9 +82,10 @@ streaming telemetry:
   `not-otp-upgraded`).
 
 Useful alarm fields: `afc-msg-err`, `healthcheck/num-hc-down`,
-`healthcheck/country-not-supported`, `healthcheck/cloud-hc-ok` (absent
-means unhealthy), `hc-error-status/*`, and the grant `expire-time` per
-AP response. Whether these models support on-change
+`healthcheck/country-not-supported`, `healthcheck/cloud-hc-ok` (healthy
+only when present and true; absence alone proves nothing, so check which
+choice case is present), `hc-error-status/*`, and the grant
+`expire-time` per AP response. Whether these models support on-change
 telemetry subscriptions is unverified; plan for periodic polling until
 you prove otherwise on your release.
 

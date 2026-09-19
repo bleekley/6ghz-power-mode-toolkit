@@ -1,7 +1,7 @@
 # pyATS precheck: 6 GHz Standard Power, controller side, on a C9800
 
-A pyATS Blitz trigger that answers one question as pass or fail, over
-NETCONF: does anything on the controller block Standard Power? Verified
+A pyATS Blitz trigger that runs seven controller-side checks as pass or
+fail: six over NETCONF plus one CLI cross-check. Verified
 against a live Catalyst 9800-CL running IOS-XE 17.17.1: five checks
 passed and two failed, and both failures were true statements about that
 controller (not OTP onboarded, Standard Power bit still false).

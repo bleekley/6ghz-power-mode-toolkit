@@ -30,7 +30,7 @@ and a standing operational dependency.
 | `decision/modes.csv` | The LPI versus Standard Power comparison as data. |
 | `docs/` | The decision guide, an AFC primer, and the C9800 programmability reference. |
 | `c9800/` | CLI cheat sheet, RESTCONF paths, and runnable ncclient scripts for the NETCONF surface. |
-| `pyats/` | A pyATS Blitz controller-side precheck: does anything on the controller block Standard Power? Easypy HTML and JSON reporting. It does not check per-AP readiness or grants. |
+| `pyats/` | A pyATS Blitz controller-side precheck: seven pass/fail checks (six NETCONF, one CLI cross-check). Easypy HTML and JSON reporting. It does not check per-AP readiness or grants. |
 
 ## Quick start
 
