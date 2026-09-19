@@ -13,7 +13,7 @@ client at distances where the client can no longer reach the AP.
 
 **Standard Power** raises the power ceilings roughly 6 dB on both sides
 of the link. Clients still must transmit up to 6 dB below the AP's
-authorized power — the asymmetry never goes away — but both the AP and
+authorized power, so the asymmetry never goes away, but both the AP and
 the client may run louder, which restores talk-back range, raises client
 MCS rates, and cuts per-client airtime. The costs are an Automated
 Frequency Coordination (AFC) dependency (3D location with stated
@@ -31,7 +31,7 @@ AP's downlink. The place this shows up is the one-for-one hardware swap:
 a 6 GHz AP on every existing 5 GHz cable drop produces coverage holes
 between drops that the old design never had. The durable fix is a
 placement redesign. When new cabling is off the table, Standard Power is
-the mechanism that can narrow the gap — verify with a survey rather than
+the mechanism that can narrow the gap. Verify with a survey rather than
 assuming it closes.
 
 ## Prerequisites before the preferences
@@ -65,8 +65,8 @@ Standard Power pairs naturally with 20 and 40 MHz plans, because narrow
 channels route around whatever exclusion notches your grant carries and
 keep reuse intact. LPI pairs with wide channels, because the PSD rules
 preserve SNR as width grows. Wide-channel Standard Power is not
-impossible — where the grant is clean, 160 MHz works and Cisco documents
-it — but you are betting the channel plan on the incumbent map around
+impossible (where the grant is clean, 160 MHz works and Cisco documents
+it), but you are betting the channel plan on the incumbent map around
 each site. Most enterprise client populations are one- and two-stream
 mobile devices running traffic that needs a few megabits per second, so
 40 MHz is a sound default in either mode. Go wider when a specific

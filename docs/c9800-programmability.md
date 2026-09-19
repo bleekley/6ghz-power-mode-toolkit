@@ -29,8 +29,8 @@ Cisco-IOS-XE-wireless-rf-cfg:rf-cfg-data/rf-profiles/rf-profile[name]/std-pwr-mo
 Catalyst Center Intent API: `enableStandardPowerService` on the wireless
 RF profile endpoints. As of the 3.1.6 documentation set (swept
 2026-09-18, all 1,393 endpoint specs), Catalyst Center had no dedicated
-API for provisioning the per-AP geolocation AFC requires — only an
-AP-height read field — so a rollout on that release cannot be completed
+API for provisioning the per-AP geolocation AFC requires (only an
+AP-height read field), so a rollout on that release cannot be completed
 by API alone. Cisco's 3.2.3 SDK adds per-AP geolocation height and
 uncertainty to the access point configuration write path, so check your
 release before assuming the gap.

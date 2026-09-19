@@ -10,9 +10,9 @@ Every enterprise 6 GHz AP runs in one of these two infrastructure modes
 classes, which this toolkit does not cover). LPI needs no coordination
 and gets the full band, but its power ceilings are low, and client
 ceilings sit 6 dB lower still, which shrinks the usable cell. Standard
-Power raises the ceilings roughly 6 dB on both sides of the link — the
+Power raises the ceilings roughly 6 dB on both sides of the link (the
 client must still stay up to 6 dB below the AP's authorized power, so
-the asymmetry never goes away — but the AP must register its 3D location
+the asymmetry never goes away), but the AP must register its 3D location
 with an Automated Frequency Coordination (AFC) service, re-authorize
 every 24 hours, operate only in U-NII-5 and U-NII-7, and give up
 whatever channels the AFC masks off at that location. LPI buys spectrum
