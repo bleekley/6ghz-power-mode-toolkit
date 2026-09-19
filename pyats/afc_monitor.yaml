@@ -1,4 +1,10 @@
-# Blitz monitor for 6 GHz AFC / Standard Power readiness on a Catalyst 9800.
+# Blitz precheck for 6 GHz AFC / Standard Power on a Catalyst 9800.
+#
+# Scope: this checks the CONTROLLER side only. A green run means nothing on
+# the controller blocks Standard Power; it does not check AP presence,
+# location, capability, per-AP grants, or grant expiry. Sections 2 and 3
+# assert on historical counters, so a system that errored once and recovered
+# keeps failing them until the counters clear.
 #
 # Everything here is driven over NETCONF against the YANG oper and config models,
 # NOT over the CLI. That is deliberate: genieparser ships no parser for any
@@ -97,11 +103,16 @@ AfcReadiness:
                       value: 'false'
                       xpath: /afc-cloud-oper-data/afc-cloud-stats/healthcheck/country-not-supported
 
-        # ---- 5. Is the controller onboarded to the AFC cloud? ----
-        # EXPECTED TO FAIL on this rig. The 9800-CL needs its OTP token imported
-        # before it will ever talk to the AFC service. This check is the whole
-        # reason to monitor: it names the blocker in a machine-readable field.
-        - afc_controller_is_onboarded:
+        # ---- 5. Does the AFC cloud health check report healthy? ----
+        # The healthcheck carries a YANG choice: a healthy service reports the
+        # cloud-hc-ok leaf, an unhealthy one reports an hc-error-status
+        # container naming the blocker (for example not-otp-upgraded). So the
+        # healthy assertion is on cloud-hc-ok; asserting on an error leaf
+        # would fail a HEALTHY controller, where that leaf is absent.
+        # EXPECTED TO FAIL on this rig: the 9800-CL needs its OTP token
+        # imported before it will ever talk to the AFC service, so
+        # cloud-hc-ok is absent here. Read the blocker with get_afc_oper.py.
+        - afc_cloud_health_is_ok:
             - yang:
                 device: wlc1
                 connection: yang
@@ -115,12 +126,12 @@ AfcReadiness:
                     namespace:
                         afc-cloud: 'http://cisco.com/ns/yang/Cisco-IOS-XE-wireless-afc-cloud-oper'
                     nodes:
-                        - xpath: /afc-cloud:afc-cloud-oper-data/afc-cloud:afc-cloud-stats/afc-cloud:healthcheck/afc-cloud:hc-error-status/afc-cloud:not-otp-upgraded
+                        - xpath: /afc-cloud:afc-cloud-oper-data/afc-cloud:afc-cloud-stats/afc-cloud:healthcheck/afc-cloud:cloud-hc-ok
                 returns:
-                    - name: not-otp-upgraded
+                    - name: cloud-hc-ok
                       op: ==
-                      value: 'false'
-                      xpath: /afc-cloud-oper-data/afc-cloud-stats/healthcheck/hc-error-status/not-otp-upgraded
+                      value: 'true'
+                      xpath: /afc-cloud-oper-data/afc-cloud-stats/healthcheck/cloud-hc-ok
 
         # ---- 6. Is Standard Power actually allowed on the 6 GHz RF profile? ----
         # This is the one writable bit in the whole feature. EXPECTED TO FAIL

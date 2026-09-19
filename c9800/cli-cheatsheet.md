@@ -21,10 +21,13 @@ show running-config all | section ap dot11 6ghz rf-profile
 ```
 show wireless afc ap
 show wireless afc statistics
-show wireless afc request  <radio-mac>
-show wireless afc response <radio-mac>
+show wireless afc request
+show wireless afc response
 show wireless afc geolocation
 ```
+
+(The command reference documents `request` and `response` without
+arguments; they cover all radios.)
 
 `show wireless afc ap` columns are the per-AP readiness checklist: AFC
 status, power mode capability, current power mode, admin states, the
@@ -45,5 +48,7 @@ configure terminal
  end
 ```
 
-NETCONF listens on port 830 and needs AAA with a privilege 15 user.
-Allow a couple of minutes after enabling before the port answers.
+NETCONF listens on port 830. The standard setup is AAA with a
+privilege 15 user; from 17.5, read-only access is possible with a
+lower-privilege user plus NACM rules. Allow a couple of minutes after
+enabling before the port answers.

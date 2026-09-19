@@ -27,10 +27,13 @@ Cisco-IOS-XE-wireless-rf-cfg:rf-cfg-data/rf-profiles/rf-profile[name]/std-pwr-mo
 ```
 
 Catalyst Center Intent API: `enableStandardPowerService` on the wireless
-RF profile endpoints. Catalyst Center has no API for the per-AP
-geolocation AFC requires (a sweep of all 1,393 endpoint specs in the
-3.1.6 documentation set found no geolocation, coordinate, or AP height
-endpoint), so a Catalyst Center rollout cannot be completed by API alone.
+RF profile endpoints. As of the 3.1.6 documentation set (swept
+2026-09-18, all 1,393 endpoint specs), Catalyst Center had no dedicated
+API for provisioning the per-AP geolocation AFC requires — only an
+AP-height read field — so a rollout on that release cannot be completed
+by API alone. Cisco's 3.2.3 SDK adds per-AP geolocation height and
+uncertainty to the access point configuration write path, so check your
+release before assuming the gap.
 
 The three names above are the same bit. None of the three documentation
 sets mentions the other two names, which makes searching miserable, so
@@ -43,11 +46,14 @@ CLI, in rough order of usefulness:
 ```
 show wireless afc ap
 show wireless afc statistics
-show wireless afc request  <radio-mac>
-show wireless afc response <radio-mac>
+show wireless afc request
+show wireless afc response
 show wireless afc geolocation
 show running-config all | section ap dot11 6ghz rf-profile
 ```
+
+(The command reference documents `request` and `response` without
+arguments; they cover all radios.)
 
 `show wireless afc ap` is the readiness checklist. Its columns are the
 conditions an AP must satisfy: AFC status, power mode capability, current
@@ -67,18 +73,22 @@ streaming telemetry:
 * `Cisco-IOS-XE-wireless-afc-oper`: the AFC request and response per AP,
   including per-channel granted power and the grant expiry timestamp.
 * `Cisco-IOS-XE-wireless-afc-cloud-oper`: message counters, error
-  counters, round-trip times, and a health check block on a 30-second
-  timer whose `hc-error-status` states the current blocker (for example
+  counters, round-trip times, and a periodic health check block (my
+  bench showed a 30-second cadence; Cisco documentation shows longer
+  timers, so treat the interval as release-dependent). The block carries
+  a YANG choice: healthy reports the `cloud-hc-ok` leaf, unhealthy
+  reports an `hc-error-status` container naming the blocker (for example
   `not-otp-upgraded`).
 
 Useful alarm fields: `afc-msg-err`, `healthcheck/num-hc-down`,
-`healthcheck/country-not-supported`, `hc-error-status/*`, and the grant
-`expire-time` per AP response. Whether these models support on-change
+`healthcheck/country-not-supported`, `healthcheck/cloud-hc-ok` (absent
+means unhealthy), `hc-error-status/*`, and the grant `expire-time` per
+AP response. Whether these models support on-change
 telemetry subscriptions is unverified; plan for periodic polling until
 you prove otherwise on your release.
 
-The `../pyats/` monitor asserts on these fields and adds one CLI
-cross-check. genieparser ships no parser for any `show wireless afc`
+The `../pyats/` controller-side precheck asserts on these fields and
+adds one CLI cross-check. genieparser ships no parser for any `show wireless afc`
 command (checked at version 26.8), which is why the monitor is NETCONF
 end to end.
 

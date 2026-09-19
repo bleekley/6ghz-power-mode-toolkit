@@ -2,7 +2,8 @@
 
 RESTCONF paths derive mechanically from the YANG models as
 `/restconf/data/{module}:{container}/...`. Send
-`Accept: application/yang-data+json`.
+`Accept: application/yang-data+json`. Percent-encode list keys such as
+`<name>` when they carry URL-special characters (`R&D` becomes `R%26D`).
 
 ## Set (PATCH or PUT)
 

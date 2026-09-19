@@ -2,13 +2,15 @@
 """Recommend a 6 GHz power mode (LPI or Standard Power) for a site.
 
 Asks yes/no questions about the deployment and prints a recommendation
-with the reasons behind it. Stdlib only. Run interactively:
+with the reasons behind it. The first three questions are prerequisites:
+Standard Power is never recommended while any of them fails, no matter
+how the preference questions land. Stdlib only. Run interactively:
 
     python3 decide.py
 
 or non-interactively with answers in question order (y/n):
 
-    python3 decide.py --answers y,n,n,y,y,n,n
+    python3 decide.py --answers y,y,y,n,n,y,y,n
 
 Print the comparison table instead:
 
@@ -19,38 +21,48 @@ import csv
 import os
 import sys
 
+# Prerequisites. A "no" on any of these blocks a Standard Power
+# recommendation outright: (question, what-is-missing-when-no)
+GATES = [
+    ("Are your APs and clients Standard Power capable, in a regulatory "
+     "domain where Standard Power with AFC is authorized?",
+     "Standard Power capable hardware in an authorized regulatory domain"),
+    ("Can your APs get reliable geolocation (GNSS anchors near windows, "
+     "few derivation hops, known heights)?",
+     "reliable AP geolocation, which every AFC grant depends on"),
+    ("Is the team willing to own AFC operations (cloud onboarding, "
+     "location provisioning, monitoring 24-hour re-authorizations)?",
+     "an owner for the standing AFC operational dependency"),
+]
+
+# Preferences, scored only when every gate passes:
 # (question, mode-it-pushes-toward, weight, reason-shown-when-yes)
 QUESTIONS = [
     ("Is this a one-for-one AP replacement on existing cable drops "
      "(no new cabling, no placement redesign)?",
      "sp", 2,
-     "One-for-one swaps under LPI produce coverage holes between drops "
-     "because of the 6 dB client penalty. Standard Power closes that gap."),
+     "One-for-one swaps under LPI often leave coverage holes between "
+     "drops, because LPI caps both AP and client power lower. Standard "
+     "Power raises both ceilings and can narrow that gap; verify with "
+     "a survey."),
     ("Do you have coverage complaints where clients see the AP fine but "
      "uploads and roams fail at the cell edge?",
      "sp", 2,
-     "That is the client talk-back failure pattern. Standard Power removes "
-     "the client power restriction."),
+     "That is the client talk-back failure pattern. Standard Power "
+     "raises the client power ceiling, which helps exactly this. The "
+     "client still transmits below the AP's authorized power."),
     ("Are 80 or 160 MHz channels a requirement (large file transfer, "
      "special-purpose clients)?",
-     "lpi", 3,
-     "AFC exclusion masks break wide contiguous channel blocks. Wide "
-     "channels belong in LPI, where PSD rules preserve SNR."),
+     "lpi", 2,
+     "AFC exclusions can break wide contiguous blocks, depending on the "
+     "grant at your location. Wide-channel plans are safer in LPI, "
+     "where the PSD rules scale power with width."),
     ("Are most client devices phones and tablets with routine traffic "
      "(streaming, browsing, messaging)?",
      "sp", 1,
-     "Mobile-first clients need a few megabits each. A 40 MHz Standard "
-     "Power plan serves them and keeps enough channels despite the masks."),
-    ("Can your APs get reliable geolocation (GNSS anchors near windows, "
-     "few derivation hops, known heights)?",
-     "sp", 2,
-     "AFC grants depend on location accuracy. Good geolocation makes "
-     "Standard Power practical."),
-    ("Is the team unwilling to run AFC operations (cloud onboarding, "
-     "location provisioning, monitoring 24-hour re-authorizations)?",
-     "lpi", 3,
-     "Standard Power adds a standing operational dependency on an "
-     "external database. Unstaffed, that dependency becomes outages."),
+     "Mobile-first clients need a few megabits each. A 40 MHz plan "
+     "serves them in either mode, which keeps a Standard Power channel "
+     "plan workable despite mask losses."),
     ("Is this a high-density space where clients sit close to the APs "
      "(classrooms, dense office, indoor stadium seating)?",
      "lpi", 1,
@@ -59,13 +71,21 @@ QUESTIONS = [
 ]
 
 CAVEATS = [
-    "A Standard Power AP that fails its AFC check-in falls back to LPI on "
-    "its own, so the LPI coverage picture is your worst case either way.",
+    "Standard Power does not make the link symmetric: clients must stay "
+    "up to 6 dB below the AP's authorized power. It raises the ceilings "
+    "for both sides.",
+    "Fallback on AFC failure varies by product. The rules allow a grace "
+    "period, dual-mode indoor APs typically drop to LPI, and SP-only "
+    "hardware cannot. Confirm your AP's behavior, and design so LPI "
+    "coverage is survivable anyway.",
     "Survey for client talk-back, not just AP signal.",
-    "40 MHz is a sound default channel width in either mode.",
-    "Regulatory rules vary by country. Confirm current rules for your "
-    "regulatory domain before deploying.",
+    "40 MHz is a sound default channel width in either mode. Go wider "
+    "when your grant and client population support it.",
+    "Regulatory rules vary by country and change over time. Confirm "
+    "current rules for your regulatory domain before deploying.",
 ]
+
+ALL_PROMPTS = [g[0] for g in GATES] + [q[0] for q in QUESTIONS]
 
 
 def ask(question):
@@ -102,28 +122,50 @@ def main():
         print_table()
         return 0
 
+    total = len(ALL_PROMPTS)
     if args.answers:
         raw = [a.strip().lower() for a in args.answers.split(",")]
-        if len(raw) != len(QUESTIONS) or not set(raw) <= {"y", "n"}:
-            parser.error(f"--answers needs {len(QUESTIONS)} comma-separated "
+        if len(raw) != total or not set(raw) <= {"y", "n"}:
+            parser.error(f"--answers needs {total} comma-separated "
                          "y/n values")
         answers = [a == "y" for a in raw]
     else:
-        print("Answer for the site you are designing, not the ideal site.\n")
-        answers = [ask(question) for question, _, _, _ in QUESTIONS]
+        print("Answer for the site you are designing, not the ideal "
+              "site.\n\nPrerequisites first:\n")
+        answers = [ask(GATES[i][0]) for i in range(len(GATES))]
+        print("\nNow the site itself:\n")
+        answers += [ask(question) for question, _, _, _ in QUESTIONS]
+
+    gate_answers = answers[:len(GATES)]
+    blockers = [missing for answered_yes, (_, missing)
+                in zip(gate_answers, GATES) if not answered_yes]
 
     scores = {"lpi": 0, "sp": 0}
     reasons = {"lpi": [], "sp": []}
-    for answered_yes, (_, mode, weight, reason) in zip(answers, QUESTIONS):
+    for answered_yes, (_, mode, weight, reason) in zip(
+            answers[len(GATES):], QUESTIONS):
         if answered_yes:
             scores[mode] += weight
             reasons[mode].append(reason)
 
     print()
-    if scores["sp"] > scores["lpi"]:
+    if blockers:
+        print("Recommendation: Low Power Indoor. Standard Power is "
+              "blocked until you have:")
+        for missing in blockers:
+            print(f"  * {missing}")
+        if scores["sp"] > scores["lpi"]:
+            print("\nYour other answers lean Standard Power "
+                  f"(score {scores['sp']} to {scores['lpi']}), so the "
+                  "blockers above are worth investigating, in order, "
+                  "before you finalize the design.")
+        pick, other = "lpi", "sp"
+    elif scores["sp"] > scores["lpi"]:
         pick, other = "sp", "lpi"
-        print("Recommendation: Standard Power "
-              f"(score {scores['sp']} to {scores['lpi']}).")
+        print("Recommendation: Standard Power candidate "
+              f"(score {scores['sp']} to {scores['lpi']}). Validate with "
+              "a survey and a real AFC grant at your location before "
+              "committing the channel plan.")
     elif scores["lpi"] > scores["sp"]:
         pick, other = "lpi", "sp"
         print("Recommendation: Low Power Indoor "
@@ -135,14 +177,14 @@ def main():
               "can enable Standard Power later if talk-back coverage "
               "demands it.")
 
-    if pick:
+    if pick and reasons[pick]:
         print("\nWhy:")
         for reason in reasons[pick]:
             print(f"  * {reason}")
-        if reasons[other]:
-            print("\nPulling the other way:")
-            for reason in reasons[other]:
-                print(f"  * {reason}")
+    if pick and reasons[other]:
+        print("\nPulling the other way:")
+        for reason in reasons[other]:
+            print(f"  * {reason}")
 
     print("\nRegardless of mode:")
     for caveat in CAVEATS:
