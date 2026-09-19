@@ -90,3 +90,10 @@ lower-privilege user plus NACM rules.
 Also check `pyats version check` first: a version-mismatched install
 (pyats packages on one release train, genie on another) refuses to start
 any job.
+
+One more, hit while re-verifying: **activate the venv, do not just call
+`venv/bin/pyats` by absolute path.** Easypy's pre-job environment check
+reads the `pip` that is on your PATH, so if the system Python carries a
+mismatched pyATS install, the job aborts with its version table and zero
+tests run, even though the venv itself is clean. `source
+venv/bin/activate` puts the venv's pip first and the check passes.
