@@ -1,9 +1,8 @@
 # 6 GHz Power Mode Toolkit
 
-Tools and reference material for one decision and its aftermath: whether a
-6 GHz Wi-Fi deployment should run Low Power Indoor (LPI) or Standard Power,
-and how to configure, verify, and monitor that choice programmatically on a
-Cisco Catalyst 9800.
+Tools and reference material for whether a 6 GHz Wi-Fi deployment should run 
+Low Power Indoor (LPI) or Standard Power, and how to configure, verify, and 
+monitor that choice programmatically on a Cisco Catalyst 9800.
 
 Every enterprise 6 GHz AP runs in one of these two infrastructure modes
 (US rules also define very-low-power and geofenced variable-power device
