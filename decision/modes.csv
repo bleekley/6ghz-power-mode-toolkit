@@ -1,0 +1,9 @@
+dimension,low_power_indoor,standard_power
+spectrum_availability,"Full 1200 MHz (US), including band-edge channels","Reduced; AFC exclusion masks remove channels near incumbents"
+channel_width,"Wide channels work (80/160 MHz); PSD rules preserve SNR","Effectively 20/40 MHz; masks break wide contiguous blocks"
+transmit_power,"Lower; +3 dB allowed per doubling of channel width","Higher; enables better client MCS rates"
+client_rule,"Clients must transmit up to 6 dB below the AP","No client penalty; full talk-back power"
+regulatory,"None; indoor use without coordination","AFC required: lat/long/height and 24-hour re-authorization"
+fallback,"Not applicable; LPI is the floor","Falls back to LPI on AFC failure"
+operational_overhead,"None after deployment","AFC onboarding, location provisioning, ongoing monitoring"
+best_fit,"Fresh designs, high density, wide-channel throughput goals","Rip-and-replace on existing drops, client talk-back coverage, large open areas"

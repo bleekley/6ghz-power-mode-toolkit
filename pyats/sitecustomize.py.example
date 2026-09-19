@@ -1,0 +1,8 @@
+# pyATS on macOS: genie's Device.learn_management pulls in pyats.tcl, which
+# creates a Tcl/Tk interpreter. Easypy runs tasks in a forked child of a
+# multi-threaded process, and initialising Tk there calls CoreFoundation, which
+# macOS refuses on the child side of a fork. Result: SIGSEGV, no traceback.
+# Nothing in this project uses the Tcl bridge, so make it unimportable and let
+# pyATS fall back rather than crash.
+import sys
+sys.modules['_tkinter'] = None

@@ -1,0 +1,158 @@
+# Blitz monitor for 6 GHz AFC / Standard Power readiness on a Catalyst 9800.
+#
+# Everything here is driven over NETCONF against the YANG oper and config models,
+# NOT over the CLI. That is deliberate: genieparser ships no parser for any
+# "show wireless afc ..." command, so a CLI-based monitor would mean writing and
+# maintaining parsers. The YANG models are already structured data.
+#
+# The single CLI section at the end shows the no-parser fallback for comparison.
+
+AfcReadiness:
+    source:
+        pkg: genie.libs.sdk
+        class: triggers.blitz.blitz.Blitz
+    devices: ['wlc1']
+    test_sections:
+
+        # ---- 1. Are the AFC models registered and answering? ----
+        - afc_oper_model_answers:
+            - yang:
+                device: wlc1
+                connection: yang
+                protocol: netconf
+                operation: get
+                datastore:
+                    type: running
+                    lock: False
+                    retry: 10
+                content:
+                    namespace:
+                        afc-oper: 'http://cisco.com/ns/yang/Cisco-IOS-XE-wireless-afc-oper'
+                    nodes:
+                        - xpath: /afc-oper:afc-oper-data
+
+        # ---- 2. Has any AFC message errored? ----
+        - afc_cloud_message_errors_are_zero:
+            - yang:
+                device: wlc1
+                connection: yang
+                protocol: netconf
+                operation: get
+                datastore:
+                    type: running
+                    lock: False
+                    retry: 10
+                content:
+                    namespace:
+                        afc-cloud: 'http://cisco.com/ns/yang/Cisco-IOS-XE-wireless-afc-cloud-oper'
+                    nodes:
+                        - xpath: /afc-cloud:afc-cloud-oper-data/afc-cloud:afc-cloud-stats/afc-cloud:afc-msg-err
+                returns:
+                    - name: afc-msg-err
+                      op: ==
+                      value: 0
+                      xpath: /afc-cloud-oper-data/afc-cloud-stats/afc-msg-err
+
+        # ---- 3. Has the AFC cloud health check ever gone down? ----
+        - afc_health_check_never_down:
+            - yang:
+                device: wlc1
+                connection: yang
+                protocol: netconf
+                operation: get
+                datastore:
+                    type: running
+                    lock: False
+                    retry: 10
+                content:
+                    namespace:
+                        afc-cloud: 'http://cisco.com/ns/yang/Cisco-IOS-XE-wireless-afc-cloud-oper'
+                    nodes:
+                        - xpath: /afc-cloud:afc-cloud-oper-data/afc-cloud:afc-cloud-stats/afc-cloud:healthcheck/afc-cloud:num-hc-down
+                returns:
+                    - name: num-hc-down
+                      op: ==
+                      value: 0
+                      xpath: /afc-cloud-oper-data/afc-cloud-stats/healthcheck/num-hc-down
+
+        # ---- 4. Is this controller in a country where AFC is allowed? ----
+        - afc_country_is_supported:
+            - yang:
+                device: wlc1
+                connection: yang
+                protocol: netconf
+                operation: get
+                datastore:
+                    type: running
+                    lock: False
+                    retry: 10
+                content:
+                    namespace:
+                        afc-cloud: 'http://cisco.com/ns/yang/Cisco-IOS-XE-wireless-afc-cloud-oper'
+                    nodes:
+                        - xpath: /afc-cloud:afc-cloud-oper-data/afc-cloud:afc-cloud-stats/afc-cloud:healthcheck/afc-cloud:country-not-supported
+                returns:
+                    - name: country-not-supported
+                      op: ==
+                      value: 'false'
+                      xpath: /afc-cloud-oper-data/afc-cloud-stats/healthcheck/country-not-supported
+
+        # ---- 5. Is the controller onboarded to the AFC cloud? ----
+        # EXPECTED TO FAIL on this rig. The 9800-CL needs its OTP token imported
+        # before it will ever talk to the AFC service. This check is the whole
+        # reason to monitor: it names the blocker in a machine-readable field.
+        - afc_controller_is_onboarded:
+            - yang:
+                device: wlc1
+                connection: yang
+                protocol: netconf
+                operation: get
+                datastore:
+                    type: running
+                    lock: False
+                    retry: 10
+                content:
+                    namespace:
+                        afc-cloud: 'http://cisco.com/ns/yang/Cisco-IOS-XE-wireless-afc-cloud-oper'
+                    nodes:
+                        - xpath: /afc-cloud:afc-cloud-oper-data/afc-cloud:afc-cloud-stats/afc-cloud:healthcheck/afc-cloud:hc-error-status/afc-cloud:not-otp-upgraded
+                returns:
+                    - name: not-otp-upgraded
+                      op: ==
+                      value: 'false'
+                      xpath: /afc-cloud-oper-data/afc-cloud-stats/healthcheck/hc-error-status/not-otp-upgraded
+
+        # ---- 6. Is Standard Power actually allowed on the 6 GHz RF profile? ----
+        # This is the one writable bit in the whole feature. EXPECTED TO FAIL
+        # here: the leaf defaults to false and is not set on this controller.
+        - standard_power_allowed_on_6ghz_profile:
+            - yang:
+                device: wlc1
+                connection: yang
+                protocol: netconf
+                operation: get-config
+                datastore:
+                    type: running
+                    lock: False
+                    retry: 10
+                content:
+                    namespace:
+                        rf-cfg: 'http://cisco.com/ns/yang/Cisco-IOS-XE-wireless-rf-cfg'
+                    nodes:
+                        - xpath: /rf-cfg:rf-cfg-data/rf-cfg:rf-profiles/rf-cfg:rf-profile[rf-cfg:name="default-rf-profile-6ghz"]/rf-cfg:std-pwr-mode-allowed
+                returns:
+                    - name: std-pwr-mode-allowed
+                      op: ==
+                      value: 'true'
+                      xpath: /rf-cfg-data/rf-profiles/rf-profile/std-pwr-mode-allowed
+
+        # ---- 7. CLI cross-check, the no-parser fallback ----
+        # genieparser has no parser for this command, so "parse" is not an option.
+        # "execute" with include/exclude gives a real assertion on raw text.
+        - cli_cross_check_six_ghz_ap_count:
+            - execute:
+                device: wlc1
+                command: show wireless afc statistics
+                include:
+                    - 'Total number of 6GHz APs'
+                    - 'Health check status'

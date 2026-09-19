@@ -1,0 +1,10 @@
+setup:
+    sections:
+        connect:
+            method: genie.harness.commons.connect
+            parameters:
+                parallel: False
+cleanup:
+    sections:
+        disconnect:
+            method: genie.harness.commons.disconnect

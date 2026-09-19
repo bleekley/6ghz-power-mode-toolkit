@@ -1,0 +1,26 @@
+# Copy to testbed.yaml and edit host and credentials. testbed.yaml is
+# gitignored so lab details stay out of version control.
+testbed:
+  name: c9800-afc-monitor
+
+devices:
+  wlc1:
+    os: iosxe
+    type: wlc
+    platform: cat9800
+    credentials:
+      default:
+        username: CHANGE_ME
+        password: CHANGE_ME
+      enable:
+        password: CHANGE_ME
+    connections:
+      cli:
+        protocol: ssh
+        ip: 198.51.100.10
+      netconf:
+        class: yang.connector.Netconf
+        ip: 198.51.100.10
+        port: 830
+        username: CHANGE_ME
+        password: CHANGE_ME

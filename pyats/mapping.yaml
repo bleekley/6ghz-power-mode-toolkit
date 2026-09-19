@@ -1,0 +1,6 @@
+devices:
+    wlc1:
+        context: yang
+        mapping:
+            cli: cli
+            yang: netconf
