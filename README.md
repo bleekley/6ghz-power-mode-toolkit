@@ -82,7 +82,7 @@ granted power, grant expiry, and the cloud health check all live in
 operational models you can poll or stream. `docs/c9800-programmability.md`
 maps the whole surface.
 
-## What is verified and what is not
+## How we verified
 
 The C9800 findings in this repo were measured on a live Catalyst 9800-CL
 running IOS-XE 17.17.1, with the on-box YANG pulled over NETCONF
